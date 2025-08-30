@@ -2,6 +2,7 @@ import pdfplumber
 import logging
 from graph import Graph
 from dotenv import load_dotenv
+from image_generation import generate_image
 
 def main():
     logging.getLogger("pdfminer").setLevel(logging.ERROR)
@@ -20,9 +21,11 @@ def main():
     print(result["summary"])
     print('='*150)
     print("QUOTES")
-    for quote in result["quotes"].quotes:
-        print(quote)
+    for idx, quote in enumerate(result["quotes"].quotes):
+        print(quote)    
         print('-'*100)
+        generate_image(quote, "-Oren Hartstein", f"test_{idx}")
+
     print('='*150)
     print("INSTA CAPTION")
     print(result["insta_caption"])
