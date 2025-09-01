@@ -1,5 +1,4 @@
 import os
-import uuid
 import zipfile
 import pdfplumber
 import gradio as gr
@@ -43,8 +42,9 @@ def run_generation(article_path: str):
         quotes = quotes_obj.quotes if hasattr(quotes_obj, "quotes") else quotes_obj
 
         image_paths = []
-        for idx, quote in enumerate(quotes):
-            title = f"gradio_{uuid.uuid4().hex[:8]}_{idx}"
+        article_title = os.path.splitext(os.path.basename(article_path))[0]
+        for idx, quote in enumerate(quotes, start=1):
+            title = f"{article_title}_{idx}"
             generate_image(quote, "-Oren Hartstein", title)
             image_paths.append(os.path.abspath(f"{title}.png"))
 

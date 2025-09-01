@@ -1,3 +1,4 @@
+import os
 import pdfplumber
 import logging
 import argparse
@@ -29,10 +30,11 @@ def main(article_path=None):
     print(result["summary"])
     print('='*150)
     print("QUOTES")
-    for idx, quote in enumerate(result["quotes"].quotes):
+    article_title = os.path.splitext(os.path.basename(article_path))[0]
+    for idx, quote in enumerate(result["quotes"].quotes, start=1):
         print(quote)    
         print('-'*100)
-        generate_image(quote, "-Oren Hartstein", f"test_{idx}")
+        generate_image(quote, "-Oren Hartstein", f"{article_title}_{idx}")
 
     print('='*150)
     print("INSTA CAPTION")
