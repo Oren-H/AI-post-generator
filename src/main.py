@@ -1,14 +1,22 @@
 import pdfplumber
 import logging
-from graph import Graph
+import argparse
+from .graph import Graph
 from dotenv import load_dotenv
-from image_generation import generate_image
+from .image_generation import generate_image
 
-def main():
+def main(article_path=None):
     logging.getLogger("pdfminer").setLevel(logging.ERROR)
     load_dotenv()
+    default_article_path = "Conservatives in Academia.pdf"
+    if not article_path:
+        try:
+            user_input = input(f"Enter article PDF path [{default_article_path}]: ").strip()
+            article_path = user_input or default_article_path
+        except EOFError:
+            article_path = default_article_path
     text = ""
-    with pdfplumber.open("Conservatives in Academia.pdf") as pdf:
+    with pdfplumber.open(article_path) as pdf:
         for page in pdf.pages:
             text += page.extract_text()
 
@@ -31,4 +39,7 @@ def main():
     print(result["insta_caption"])
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Generate Instagram post images from an article PDF.")
+    parser.add_argument("--article", "-a", help="Path to the article PDF", default=None)
+    args = parser.parse_args()
+    main(article_path=args.article)

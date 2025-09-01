@@ -1,8 +1,8 @@
 from langchain_core.messages import SystemMessage, HumanMessage
-from schemas import State
+from .schemas import State
 from langchain_openai import ChatOpenAI
-from schemas import Quotes
-from prompts import pullout_sys_msg, summarizer_sys_msg, insta_caption_sys_msg
+from .schemas import Quotes
+from .prompts import pullout_sys_msg, summarizer_sys_msg, insta_caption_sys_msg
 
 def _get_chat_model(model = 'gpt-4o'):
     # Lazily construct the client so that importing this module doesn't require OPENAI_API_KEY.

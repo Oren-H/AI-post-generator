@@ -1,6 +1,6 @@
 from langgraph.graph import START, END, StateGraph
-from nodes import quote_generator, summarizer, insta_caption_generator
-from schemas import State
+from .nodes import quote_generator, summarizer, insta_caption_generator
+from .schemas import State
 
 
 class Graph:
