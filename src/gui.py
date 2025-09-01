@@ -15,7 +15,7 @@ def run_generation(article_path: str, author: str):
             gr.update(value=[], visible=False),
             gr.update(value="", visible=False),
             gr.update(value=[], visible=False),
-            gr.update(value="Please provide a PDF path.", visible=True),
+            gr.update(value="Please upload a PDF.", visible=True),
             [],
             gr.update(visible=False),
         )
@@ -88,13 +88,9 @@ def create_zip(image_paths: list):
 
 def launch_app():
     with gr.Blocks(title="AI Post Generator", analytics_enabled=False) as demo:
-        gr.Markdown("## AI Post Generator\nEnter the path to a PDF article and click Generate.")
+        gr.Markdown("## AI Post Generator\nUpload a PDF article and click Generate.")
         with gr.Row():
-            article_input = gr.Textbox(
-                label="Article PDF Path",
-                value="Conservatives in Academia.pdf",
-                placeholder="/absolute/or/relative/path/to/article.pdf",
-            )
+            article_input = gr.File(label="Article PDF", file_types=[".pdf"], file_count="single", type="filepath")
             author_input = gr.Textbox(
                 label="Author",
                 value="",
