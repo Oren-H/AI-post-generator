@@ -12,6 +12,7 @@ def run_generation(article_path: str):
     if not article_path:
         yield (
             gr.update(value=[], visible=False),
+            gr.update(value="", visible=False),
             gr.update(value=[], visible=False),
             gr.update(value="Please provide a PDF path.", visible=True),
             [],
@@ -22,6 +23,7 @@ def run_generation(article_path: str):
         # Immediately inform the user that generation has started
         yield (
             gr.update(value=[], visible=False),
+            gr.update(value="", visible=False),
             gr.update(value=[], visible=False),
             gr.update(value="Generating images... this may take a minute.", visible=True),
             [],
@@ -38,6 +40,8 @@ def run_generation(article_path: str):
         config = {"configurable": {"thread_id": "gradio"}}
         result = graph.invoke({"article": text}, config=config)
 
+        caption = result.get("insta_caption") or ""
+
         quotes_obj = result.get("quotes")
         quotes = quotes_obj.quotes if hasattr(quotes_obj, "quotes") else quotes_obj
 
@@ -50,6 +54,7 @@ def run_generation(article_path: str):
 
         yield (
             gr.update(value=image_paths, visible=True),
+            gr.update(value=caption, visible=True),
             gr.update(value=image_paths, visible=True),
             gr.update(value="Done.", visible=True),
             image_paths,
@@ -58,6 +63,7 @@ def run_generation(article_path: str):
     except Exception as exc:  # noqa: BLE001 - surface error to user
         yield (
             gr.update(value=[], visible=False),
+            gr.update(value="", visible=False),
             gr.update(value=[], visible=False),
             gr.update(value=f"Error: {exc}", visible=True),
             [],
@@ -90,6 +96,7 @@ def launch_app():
         generate_btn = gr.Button("Generate")
         with gr.Row():
             gallery = gr.Gallery(label="Generated Images", columns=3, height=600, visible=False)
+        caption_box = gr.Textbox(label="Instagram Caption", lines=4, visible=False)
         files = gr.Files(label="Download Images", visible=False)
         with gr.Row():
             download_all_btn = gr.DownloadButton("Download All", visible=False)
@@ -99,7 +106,7 @@ def launch_app():
         generate_btn.click(
             fn=run_generation,
             inputs=article_input,
-            outputs=[gallery, files, status, paths_state, download_all_btn],
+            outputs=[gallery, caption_box, files, status, paths_state, download_all_btn],
         )
         download_all_btn.click(fn=create_zip, inputs=paths_state, outputs=download_all_btn)
 
