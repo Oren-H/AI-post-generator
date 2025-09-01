@@ -98,7 +98,7 @@ def launch_app():
             )
         generate_btn = gr.Button("Generate")
         with gr.Row():
-            gallery = gr.Gallery(label="Generated Images", columns=3, height=600, visible=False)
+            gallery = gr.Gallery(label="Generated Images", columns=3, visible=False)
         caption_box = gr.Textbox(label="Instagram Caption", lines=4, visible=False)
         files = gr.Files(label="Download Images", visible=False)
         with gr.Row():
