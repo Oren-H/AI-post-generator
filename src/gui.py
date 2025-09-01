@@ -7,8 +7,9 @@ from .graph import Graph
 from .image_generation import generate_image
 
 
-def run_generation(article_path: str):
+def run_generation(article_path: str, author: str):
     article_path = (article_path or "").strip()
+    author = (author or "").strip()
     if not article_path:
         yield (
             gr.update(value=[], visible=False),
@@ -47,9 +48,10 @@ def run_generation(article_path: str):
 
         image_paths = []
         article_title = os.path.splitext(os.path.basename(article_path))[0]
+        byline = f"-{author}" if author and not author.startswith("-") else (author or "-Oren Hartstein")
         for idx, quote in enumerate(quotes, start=1):
             title = f"{article_title}_{idx}"
-            generate_image(quote, "-Oren Hartstein", title)
+            generate_image(quote, byline, title)
             image_paths.append(os.path.abspath(f"{title}.png"))
 
         yield (
@@ -93,6 +95,11 @@ def launch_app():
                 value="Conservatives in Academia.pdf",
                 placeholder="/absolute/or/relative/path/to/article.pdf",
             )
+            author_input = gr.Textbox(
+                label="Author",
+                value="",
+                placeholder="e.g., Oren Hartstein",
+            )
         generate_btn = gr.Button("Generate")
         with gr.Row():
             gallery = gr.Gallery(label="Generated Images", columns=3, height=600, visible=False)
@@ -105,7 +112,7 @@ def launch_app():
 
         generate_btn.click(
             fn=run_generation,
-            inputs=article_input,
+            inputs=[article_input, author_input],
             outputs=[gallery, caption_box, files, status, paths_state, download_all_btn],
         )
         download_all_btn.click(fn=create_zip, inputs=paths_state, outputs=download_all_btn)
