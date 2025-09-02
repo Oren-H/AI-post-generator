@@ -58,12 +58,24 @@ def run_generation(article_path: str, author: str):
             generate_image(quote, byline, title, save_dir=save_dir)
             image_paths.append(os.path.abspath(os.path.join(save_dir, f"{title}.png")))
 
+        # Save caption to a .txt file and include in downloadable files/state (not gallery)
+        caption_path = os.path.abspath(os.path.join(save_dir, f"{article_title}_caption.txt"))
+        try:
+            with open(caption_path, "w", encoding="utf-8") as f:
+                f.write(caption)
+        except Exception:
+            caption_path = None
+
+        download_paths = image_paths.copy()
+        if caption_path and os.path.isfile(caption_path):
+            download_paths.append(caption_path)
+
         yield (
             gr.update(value=image_paths, visible=True),
             gr.update(value=caption, visible=True),
-            gr.update(value=image_paths, visible=True),
+            gr.update(value=download_paths, visible=True),
             gr.update(value="Done.", visible=True),
-            image_paths,
+            download_paths,
             gr.update(visible=True),
         )
     except Exception as exc:  # noqa: BLE001 - surface error to user

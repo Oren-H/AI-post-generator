@@ -35,6 +35,14 @@ def main(article_path=None, output_dir=None):
     # Default output directory to the article's directory if not provided
     if not output_dir:
         output_dir = os.path.dirname(os.path.abspath(article_path))
+    # Save caption to a .txt file alongside images
+    caption_path = os.path.join(output_dir, f"{article_title}_caption.txt")
+    try:
+        with open(caption_path, "w", encoding="utf-8") as f:
+            f.write(caption or "")
+    except Exception:
+        # Non-fatal if caption fails to save; continue with image generation
+        pass
     for idx, quote in enumerate(result["quotes"].quotes, start=1):
         print(quote)    
         print('-'*100)
