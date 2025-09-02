@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
+import os
 
 def _wrap_text(draw, text, font, max_width):
     """
@@ -23,7 +24,7 @@ def _wrap_text(draw, text, font, max_width):
         lines.append(" ".join(current_line))
     return lines
 
-def generate_image(quote, byline, title):
+def generate_image(quote, byline, title, save_dir=None):
 
     # 1. Define image dimensions and background color
     img_width = 1080  # Standard Instagram post aspect ratio (square)
@@ -102,5 +103,12 @@ def generate_image(quote, byline, title):
         print(f"An error occurred while processing the logo: {e}")
 
     # 11. Save the image
-    image.save(title + ".png")
+    if save_dir:
+        try:
+            os.makedirs(save_dir, exist_ok=True)
+        except Exception:
+            # If directory creation fails, fall back to current directory
+            save_dir = None
+    output_path = os.path.join(save_dir, title + ".png") if save_dir else (title + ".png")
+    image.save(output_path)
     print(f"Image {title} generated successfully!")

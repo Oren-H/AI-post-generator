@@ -1,5 +1,7 @@
 import os
 import zipfile
+import sys
+import subprocess
 import pdfplumber
 import gradio as gr
 from dotenv import load_dotenv
@@ -49,10 +51,11 @@ def run_generation(article_path: str, author: str):
         image_paths = []
         article_title = os.path.splitext(os.path.basename(article_path))[0]
         byline = f"-{author}" if author and not author.startswith("-") else (author or "-Oren Hartstein")
+        save_dir = os.path.dirname(os.path.abspath(article_path))
         for idx, quote in enumerate(quotes, start=1):
             title = f"{article_title}_{idx}"
-            generate_image(quote, byline, title)
-            image_paths.append(os.path.abspath(f"{title}.png"))
+            generate_image(quote, byline, title, save_dir=save_dir)
+            image_paths.append(os.path.abspath(os.path.join(save_dir, f"{title}.png")))
 
         yield (
             gr.update(value=image_paths, visible=True),
@@ -79,7 +82,19 @@ def create_zip(image_paths: list):
     safe_paths = [p for p in image_paths if p and os.path.isfile(p)]
     if not safe_paths:
         return None
-    zip_name = "images.zip"
+    # On macOS, prompt for a destination folder using a native chooser
+    selected_dir = None
+    if sys.platform == "darwin":
+        try:
+            script = 'POSIX path of (choose folder with prompt "Choose a folder to save images.zip")'
+            result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
+            path = (result.stdout or "").strip()
+            if path and os.path.isdir(path):
+                selected_dir = path
+        except Exception:
+            selected_dir = None
+
+    zip_name = os.path.join(selected_dir, "images.zip") if selected_dir else "images.zip"
     with zipfile.ZipFile(zip_name, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         for p in safe_paths:
             zf.write(p, arcname=os.path.basename(p))
