@@ -153,7 +153,9 @@ def launch_app():
         )
         download_all_btn.click(fn=create_zip, inputs=paths_state, outputs=download_all_btn)
 
-    demo.queue().launch()
+    # Use PORT environment variable for deployment platforms like Fly.io
+    port = int(os.getenv("PORT", 7860))
+    demo.queue().launch(server_name="0.0.0.0", server_port=port)
 
 
 if __name__ == "__main__":
