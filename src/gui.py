@@ -3,6 +3,7 @@ import zipfile
 import sys
 import subprocess
 import pdfplumber
+import shutil
 import gradio as gr
 from dotenv import load_dotenv
 from .graph import Graph
@@ -86,7 +87,7 @@ def create_zip(image_paths: list):
     selected_dir = None
     if sys.platform == "darwin":
         try:
-            script = 'POSIX path of (choose folder with prompt "Choose a folder to save images.zip")'
+            script = 'POSIX path of (choose folder with prompt "Choose a folder to save images")'
             result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
             path = (result.stdout or "").strip()
             if path and os.path.isdir(path):
@@ -94,7 +95,19 @@ def create_zip(image_paths: list):
         except Exception:
             selected_dir = None
 
-    zip_name = os.path.join(selected_dir, "images.zip") if selected_dir else "images.zip"
+    # If a folder was chosen, copy images directly into it; otherwise, no-op
+    if selected_dir:
+        for p in safe_paths:
+            try:
+                shutil.copy2(p, os.path.join(selected_dir, os.path.basename(p)))
+            except Exception:
+                # Skip files that cannot be copied
+                continue
+        # No file to download; returning None keeps the button without triggering a download
+        return None
+    
+    # If no folder selected (e.g., non-macOS), fall back to creating a zip in CWD
+    zip_name = "images.zip"
     with zipfile.ZipFile(zip_name, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         for p in safe_paths:
             zf.write(p, arcname=os.path.basename(p))
