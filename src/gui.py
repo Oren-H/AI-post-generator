@@ -24,15 +24,6 @@ def run_generation(article_path: str, author: str):
         )
         return
     try:
-        # Immediately inform the user that generation has started
-        yield (
-            gr.update(value=[], visible=False),
-            gr.update(value="", visible=False),
-            gr.update(value=[], visible=False),
-            gr.update(value="Generating images... this may take a minute.", visible=True),
-            [],
-            gr.update(visible=False),
-        )
         load_dotenv()
         text = ""
         with pdfplumber.open(article_path) as pdf:
