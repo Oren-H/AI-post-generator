@@ -47,7 +47,7 @@ def generate_image(quote, byline, title, save_dir=None):
     try:
         font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
         font_main = ImageFont.truetype(font_path, size=50)
-        font_byline = ImageFont.truetype(font_path, size=30)
+        font_byline = ImageFont.truetype(font_path, size=40)
         
     except IOError:
         print("Font file not found. Using default font.")
