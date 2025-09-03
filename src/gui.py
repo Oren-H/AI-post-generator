@@ -4,6 +4,7 @@ import sys
 import subprocess
 import pdfplumber
 import shutil
+import tempfile
 import gradio as gr
 from dotenv import load_dotenv
 from .graph import Graph
@@ -25,8 +26,27 @@ def run_generation(article_path: str, author: str):
         return
     try:
         load_dotenv()
+        # Make a safe copy of the uploaded file so streaming (yields) doesn't race with temp cleanup
+        safe_article_path = None
+        try:
+            temp_dir = tempfile.mkdtemp(prefix="ai_post_")
+            safe_article_path = os.path.join(temp_dir, os.path.basename(article_path))
+            shutil.copy2(article_path, safe_article_path)
+            # Inform the user immediately that generation has started
+            yield (
+                gr.update(value=[], visible=False),
+                gr.update(value="", visible=False),
+                gr.update(value=[], visible=False),
+                gr.update(value="Generating images... this may take a minute.", visible=True),
+                [],
+                gr.update(visible=False),
+            )
+        except Exception:
+            safe_article_path = None
+
+        open_path = safe_article_path or article_path
         text = ""
-        with pdfplumber.open(article_path) as pdf:
+        with pdfplumber.open(open_path) as pdf:
             for page in pdf.pages:
                 extracted = page.extract_text() or ""
                 text += extracted
@@ -43,7 +63,7 @@ def run_generation(article_path: str, author: str):
         image_paths = []
         article_title = os.path.splitext(os.path.basename(article_path))[0]
         byline = f"-{author}" if author and not author.startswith("-") else (author or "-Oren Hartstein")
-        save_dir = os.path.dirname(os.path.abspath(article_path))
+        save_dir = os.path.dirname(os.path.abspath(open_path))
         for idx, quote in enumerate(quotes, start=1):
             title = f"{article_title}_{idx}"
             generate_image(quote, byline, title, save_dir=save_dir)
