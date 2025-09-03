@@ -7,7 +7,7 @@ WORKDIR /app
 # Install system dependencies for PDF processing and image handling
 RUN apt-get update && apt-get install -y \
     --no-install-recommends \
-    gcc \
+    gcc fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better Docker layer caching

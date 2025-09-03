@@ -1,0 +1,6 @@
+- Either edit prompt or explicitly add a "humanize" node
+- Play around with feat to modify image layout
+- add option to change slide size and modify default
+- Add default layout feature
+- Modify system prompts to be more aligned with the free press
+- Make system prompts visible?

@@ -1,6 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
 
+
 def _wrap_text(draw, text, font, max_width):
     """
     Wraps text to fit within a specified maximum width.
@@ -44,8 +45,10 @@ def generate_image(quote, byline, title, save_dir=None):
 
     # 5. Load a font (You'll need a font file, e.g., .ttf or .otf)
     try:
-        font_main = ImageFont.truetype("Times New Roman.ttf", size=50)
-        font_byline = ImageFont.truetype("Times New Roman.ttf", size=30)
+        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+        font_main = ImageFont.truetype(font_path, size=50)
+        font_byline = ImageFont.truetype(font_path, size=30)
+        
     except IOError:
         print("Font file not found. Using default font.")
         font_main = ImageFont.load_default()
