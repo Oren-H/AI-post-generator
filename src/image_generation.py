@@ -45,7 +45,7 @@ def generate_image(quote, byline, title, save_dir=None):
 
     # 5. Load a font (You'll need a font file, e.g., .ttf or .otf)
     try:
-        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+        font_path = "DejaVuSerif.ttf"
         font_main = ImageFont.truetype(font_path, size=50)
         font_byline = ImageFont.truetype(font_path, size=40)
         
