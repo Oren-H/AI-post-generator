@@ -47,7 +47,7 @@ def generate_image(quote, byline, title, save_dir=None):
     try:
         font_path = "DejaVuSerif.ttf"
         font_main = ImageFont.truetype(font_path, size=50)
-        font_byline = ImageFont.truetype(font_path, size=40)
+        font_byline = ImageFont.truetype(font_path, size=50)
         
     except IOError:
         print("Font file not found. Using default font.")
@@ -79,9 +79,12 @@ def generate_image(quote, byline, title, save_dir=None):
 
     # 9. Draw the byline text at the bottom
     byline_x = padding
-    byline_y = img_height - padding - draw.textbbox((0, 0), byline, font=font_byline)[3]
-    byline_color = (255, 100, 100) # Lighter red for contrast
-    draw.text((byline_x, byline_y), byline, fill=byline_color, font=font_byline)
+    formatted_byline = byline
+    if byline and byline.strip():
+        formatted_byline = "—" + byline.lstrip("-–— ").strip()
+    byline_y = img_height - padding - draw.textbbox((0, 0), formatted_byline, font=font_byline)[3] + 20
+    byline_color = (242, 210, 65)  # Warm golden yellow
+    draw.text((byline_x, byline_y), formatted_byline, fill=byline_color, font=font_byline)
 
     # 10. Load and place the logo image at the bottom-right
     # The logo file must be in the same directory as this script
