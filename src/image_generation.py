@@ -77,34 +77,40 @@ def generate_image(quote, byline, title, save_dir=None):
         draw.text((x, current_y), line, fill=text_color, font=font_main)
         current_y += text_height
 
-    # 9. Draw the byline text at the bottom
-    byline_x = padding
+    # 9. Draw the byline text at the bottom center
     formatted_byline = byline
     if byline and byline.strip():
         formatted_byline = "—" + byline.lstrip("-–— ").strip()
-    byline_y = img_height - padding - draw.textbbox((0, 0), formatted_byline, font=font_byline)[3] + 20
+    byline_width = draw.textbbox((0, 0), formatted_byline, font=font_byline)[2]
+    byline_height = draw.textbbox((0, 0), formatted_byline, font=font_byline)[3]
+    byline_x = (img_width - byline_width) / 2
+    byline_y = img_height - padding - byline_height + 20
     byline_color = (242, 210, 65)  # Warm golden yellow
     draw.text((byline_x, byline_y), formatted_byline, fill=byline_color, font=font_byline)
 
-    # 10. Load and place the logo image at the bottom-right
-    # The logo file must be in the same directory as this script
+    # 10. Load and place the logo image at the top center
+    # Resolve logo path relative to project root (parent of this file's directory)
     try:
-        logo = Image.open("sundial_logo_white.png")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(script_dir)
+        logo_path = os.path.join(project_root, "sundial_logo_white.png")
+
+        logo = Image.open(logo_path).convert("RGBA")
         logo_width = 200 # Set a desired width for the logo
         aspect_ratio = logo.width / logo.height
         logo_height = int(logo_width / aspect_ratio)
 
         logo = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
 
-        # Position the logo in the bottom right corner with padding
-        logo_x = img_width - padding - logo.width + 80
-        logo_y = img_height - padding - logo.height + 130
+        # Position the logo at the top center with padding
+        logo_x = int((img_width - logo.width) / 2)
+        logo_y = int(max(0, padding - 60))
 
         # Paste the logo onto the main image using its alpha channel for transparency
         image.paste(logo, (logo_x, logo_y), logo)
 
     except FileNotFoundError:
-        print("Logo file 'logo.png' not found. Skipping logo placement.")
+        print(f"Logo file not found at: {logo_path}. Skipping logo placement.")
     except Exception as e:
         print(f"An error occurred while processing the logo: {e}")
 
