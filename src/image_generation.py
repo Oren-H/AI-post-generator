@@ -106,8 +106,11 @@ def generate_image(quote, byline, title, save_dir=None):
         logo_x = int((img_width - logo.width) / 2)
         logo_y = int(max(0, padding - 60))
 
-        # Paste the logo onto the main image using its alpha channel for transparency
-        image.paste(logo, (logo_x, logo_y), logo)
+        # Recolor the logo to match the byline color while preserving transparency
+        alpha = logo.split()[-1]
+        colored_logo = Image.new("RGBA", logo.size, byline_color + (255,))
+        colored_logo.putalpha(alpha)
+        image.paste(colored_logo, (logo_x, logo_y), colored_logo)
 
     except FileNotFoundError:
         print(f"Logo file not found at: {logo_path}. Skipping logo placement.")
