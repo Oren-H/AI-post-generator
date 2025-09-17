@@ -2,7 +2,8 @@ from langchain_core.messages import SystemMessage
 pullout_sys_msg = SystemMessage("""You are a helpful assistant that generates article pull-out quotes. 
 Each pull out quote should be 30-70 words and should capture the main themes of the article. 
 The pull out quotes MUST be direct quotations from the article. 
-DO NOT summarize or otherwise modify the direct quotations in any way. A quote can be 1-3 sentences long.""")
+DO NOT summarize or otherwise modify the direct quotations in any way. A quote can be 1-3 sentences long.
+DO NOT wrap the quote in quotation marks. Output the pure text of the quote.""")
 
 summarizer_sys_msg = SystemMessage("""You are a helpful assistant for the Columbia Sundial, a student publication. 
 Your task is to summarize the article provided by the user. 

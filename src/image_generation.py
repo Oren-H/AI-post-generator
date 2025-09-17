@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
+import re
 
 
 def _wrap_text(draw, text, font, max_width):
@@ -25,6 +26,39 @@ def _wrap_text(draw, text, font, max_width):
         lines.append(" ".join(current_line))
     return lines
 
+def _normalize_quotes(text: str) -> str:
+    """
+    Convert paired single quotation marks used for quoting into double quotes,
+    without touching apostrophes inside words. Handles both straight ('') and
+    curly (‘ ’) single quotes when they appear as surrounding punctuation/space
+    delimited quotes.
+    """
+    if not text:
+        return text
+
+    # First, normalize any existing curly double quotes to straight ASCII double quotes
+    normalized = text.replace("“", '"').replace("”", '"')
+
+    # Define boundaries to avoid touching apostrophes inside words
+    boundary_before = r'(^|[\s\(\[\{])'
+    boundary_after = r'(?=[\s\)\]\}\.,;:!?]|$)'
+
+    # Replace curly single quotes used as quotes with straight double quotes
+    def repl_curly_singles(m):
+        before, inner = m.group(1), m.group(2)
+        return f"{before}\"{inner}\""
+
+    normalized = re.sub(boundary_before + r'‘([^’]+)’' + boundary_after, repl_curly_singles, normalized)
+
+    # Replace straight single quotes used as quotes with straight double quotes
+    def repl_straight_singles(m):
+        before, inner = m.group(1), m.group(2)
+        return f"{before}\"{inner}\""
+
+    normalized = re.sub(boundary_before + r"'([^'\"””]+)'" + boundary_after, repl_straight_singles, normalized)
+
+    return normalized
+
 def generate_image(quote, byline, title, save_dir=None):
 
     # 1. Define image dimensions and background color
@@ -39,7 +73,7 @@ def generate_image(quote, byline, title, save_dir=None):
     draw = ImageDraw.Draw(image)
 
     # 4. Define the text to display. This is a long paragraph to match the image.
-    long_text = quote
+    long_text = _normalize_quotes(quote)
     byline_text = "-Oren Hartstein"
     logo_text = "Columbia Sundial"
 
@@ -47,7 +81,7 @@ def generate_image(quote, byline, title, save_dir=None):
     try:
         font_path = "DejaVuSerif.ttf"
         font_main = ImageFont.truetype(font_path, size=50)
-        font_byline = ImageFont.truetype(font_path, size=50)
+        font_byline = ImageFont.truetype(font_path, size=45)
         
     except IOError:
         print("Font file not found. Using default font.")
@@ -56,7 +90,7 @@ def generate_image(quote, byline, title, save_dir=None):
 
     # 6. Wrap the main text based on the image width with some padding
     padding = 100
-    wrapped_text = _wrap_text(draw, quote, font_main, img_width - padding * 2)
+    wrapped_text = _wrap_text(draw, long_text, font_main, img_width - padding * 2)
 
     # 7. Calculate text position to center the entire block
     # Sum the height of each line using textbbox()
