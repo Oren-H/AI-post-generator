@@ -28,36 +28,46 @@ def _wrap_text(draw, text, font, max_width):
 
 def _normalize_quotes(text: str) -> str:
     """
-    Convert paired single quotation marks used for quoting into double quotes,
-    without touching apostrophes inside words. Handles both straight ('') and
-    curly (‘ ’) single quotes when they appear as surrounding punctuation/space
-    delimited quotes.
+    Ensure nested quotes inside the pullout use single quotes, not double quotes,
+    while preserving apostrophes inside words. Converts paired double quotes
+    (straight or curly) used as quoting delimiters into single quotes.
     """
     if not text:
         return text
 
-    # First, normalize any existing curly double quotes to straight ASCII double quotes
-    normalized = text.replace("“", '"').replace("”", '"')
+    normalized = text
 
-    # Define boundaries to avoid touching apostrophes inside words
+    # Boundaries: avoid converting apostrophes inside words
     boundary_before = r'(^|[\s\(\[\{])'
     boundary_after = r'(?=[\s\)\]\}\.,;:!?]|$)'
 
-    # Replace curly single quotes used as quotes with straight double quotes
-    def repl_curly_singles(m):
+    # Curly double quotes → single quotes when used as quoting delimiters
+    def repl_curly_doubles(m):
         before, inner = m.group(1), m.group(2)
-        return f"{before}\"{inner}\""
+        return f"{before}'{inner}'"
 
-    normalized = re.sub(boundary_before + r'‘([^’]+)’' + boundary_after, repl_curly_singles, normalized)
+    normalized = re.sub(boundary_before + r'“([^”]+)”' + boundary_after, repl_curly_doubles, normalized)
 
-    # Replace straight single quotes used as quotes with straight double quotes
-    def repl_straight_singles(m):
+    # Straight double quotes → single quotes when used as quoting delimiters
+    def repl_straight_doubles(m):
         before, inner = m.group(1), m.group(2)
-        return f"{before}\"{inner}\""
+        return f"{before}'{inner}'"
 
-    normalized = re.sub(boundary_before + r"'([^'\"””]+)'" + boundary_after, repl_straight_singles, normalized)
+    normalized = re.sub(boundary_before + r'"([^"\n]+)"' + boundary_after, repl_straight_doubles, normalized)
 
     return normalized
+
+def _ensure_wrapped_in_double(text: str) -> str:
+    """Wrap entire text in straight double quotes if not already double-quoted."""
+    if not text:
+        return text
+    stripped = text.strip()
+    if (stripped.startswith('"') and stripped.endswith('"')) or (
+        stripped.startswith('“') and stripped.endswith('”')
+    ):
+        # Normalize to straight doubles for rendering consistency
+        return '"' + stripped.strip('“”').strip('"') + '"'
+    return '"' + stripped + '"'
 
 def generate_image(quote, byline, title, save_dir=None):
 
@@ -73,7 +83,7 @@ def generate_image(quote, byline, title, save_dir=None):
     draw = ImageDraw.Draw(image)
 
     # 4. Define the text to display. This is a long paragraph to match the image.
-    long_text = _normalize_quotes(quote)
+    long_text = _ensure_wrapped_in_double(_normalize_quotes(quote))
     byline_text = "-Oren Hartstein"
     logo_text = "Columbia Sundial"
 
