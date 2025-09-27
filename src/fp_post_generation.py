@@ -69,6 +69,14 @@ def _ensure_wrapped_in_double(text: str) -> str:
         return '"' + stripped.strip('""').strip('"') + '"'
     return '"' + stripped + '"'
 
+def _draw_bold_text(draw, text, position, font, fill):
+    """Draw text with simulated bold effect by drawing multiple times with slight offsets."""
+    x, y = position
+    # Draw the text multiple times with more offsets for heavier bold effect
+    offsets = [(0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2), (2, 1), (1, 2), (2, 2)]
+    for dx, dy in offsets:
+        draw.text((x + dx, y + dy), text, fill=fill, font=font)
+
 def generate_image(quote, byline, title, save_dir=None):
 
     # 1. Define image dimensions and background color - The Free Press style
@@ -88,27 +96,81 @@ def generate_image(quote, byline, title, save_dir=None):
     byline_text = "-Oren Hartstein"
     logo_text = "The Free Press"
 
-    # 5. Load fonts - The Free Press uses clean, modern sans-serif fonts
+    # 5. Load fonts - The Free Press uses very bold, heavy sans-serif fonts
     try:
-        # Try to use system fonts that match The Free Press style
-        # Helvetica Neue or Arial as fallback for clean sans-serif look
+        # Try to use the boldest system fonts available that match The Free Press style
         font_paths = [
-            "/System/Library/Fonts/Helvetica.ttc",  # macOS
-            "/System/Library/Fonts/Arial.ttf",      # Windows/macOS fallback
-            "DejaVuSans.ttf",                       # Linux fallback
+            "/System/Library/Fonts/Helvetica.ttc",  # macOS - try to get bold variant
+            "/System/Library/Fonts/Supplemental/Arial Black.ttf",  # Very bold
+            "/System/Library/Fonts/Arial.ttf",      # Fallback
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",  # Linux bold
             "arial.ttf"                             # Generic fallback
         ]
         
         font_main = None
         font_byline = None
+        font_logo = None
         
-        for font_path in font_paths:
+        # Try to load specific bold variants first for main text and logo
+        bold_variants = [
+            ("/System/Library/Fonts/Helvetica.ttc", 1),  # Try bold index in collection
+            ("/System/Library/Fonts/Supplemental/Arial Black.ttf", 0),
+            ("/System/Library/Fonts/Arial.ttf", 0),
+        ]
+        
+        for font_path, font_index in bold_variants:
             try:
-                font_main = ImageFont.truetype(font_path, size=48)
-                font_byline = ImageFont.truetype(font_path, size=36)
+                # The Free Press uses VERY large, heavy text - make it even bigger and bolder
+                if font_path.endswith('.ttc'):
+                    # For font collections, try to get bold variant
+                    font_main = ImageFont.truetype(font_path, size=95, index=font_index)  # Even larger
+                    font_logo = ImageFont.truetype(font_path, size=42, index=font_index)
+                else:
+                    font_main = ImageFont.truetype(font_path, size=95)  # Even larger
+                    font_logo = ImageFont.truetype(font_path, size=42)
                 break
-            except (IOError, OSError):
+            except (IOError, OSError, TypeError):
                 continue
+        
+        # For byline, use a serif font like The Free Press does - appears to be italic
+        serif_fonts = [
+            ("/System/Library/Fonts/Times.ttc", 2),  # macOS Times Italic (index 2)
+            ("/System/Library/Fonts/Times.ttc", 0),  # macOS Times Regular fallback
+            "/System/Library/Fonts/Georgia.ttf",  # Georgia serif
+            "/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf",  # Linux italic
+            "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf",  # Linux regular
+            "times.ttf",  # Generic fallback
+        ]
+        
+        for serif_item in serif_fonts:
+            try:
+                if isinstance(serif_item, tuple):
+                    serif_path, font_index = serif_item
+                    font_byline = ImageFont.truetype(serif_path, size=44, index=font_index)  # Slightly smaller
+                else:
+                    font_byline = ImageFont.truetype(serif_item, size=44)  # Slightly smaller
+                break
+            except (IOError, OSError, TypeError):
+                continue
+        
+        # Fallback to regular loading if bold variants fail
+        if font_main is None:
+            for font_path in font_paths:
+                try:
+                    font_main = ImageFont.truetype(font_path, size=95)  # Updated size
+                    font_logo = ImageFont.truetype(font_path, size=42)  # Updated size
+                    break
+                except (IOError, OSError):
+                    continue
+        
+        # Fallback for byline if serif fonts fail
+        if font_byline is None:
+            for font_path in font_paths:
+                try:
+                    font_byline = ImageFont.truetype(font_path, size=44)  # Updated size
+                    break
+                except (IOError, OSError):
+                    continue
                 
         if font_main is None:
             raise IOError("No suitable font found")
@@ -117,9 +179,11 @@ def generate_image(quote, byline, title, save_dir=None):
         print("Font file not found. Using default font.")
         font_main = ImageFont.load_default()
         font_byline = ImageFont.load_default()
+        font_logo = ImageFont.load_default()
 
     # 6. Wrap the main text based on the image width with some padding
-    padding = 80
+    # The Free Press uses more generous padding
+    padding = 120
     wrapped_text = _wrap_text(draw, long_text, font_main, img_width - padding * 2)
 
     # 7. Calculate text position to center the entire block
@@ -129,8 +193,8 @@ def generate_image(quote, byline, title, save_dir=None):
 
     start_y = (img_height - total_text_height) / 2
 
-    # 8. Draw each line of the wrapped text - The Free Press uses dark text on light backgrounds
-    text_color = (40, 40, 40)  # Dark gray/black for readability
+    # 8. Draw each line of the wrapped text - The Free Press uses pure black text
+    text_color = (0, 0, 0)  # Pure black for maximum contrast
     current_y = start_y
 
     for line in wrapped_text:
@@ -138,79 +202,59 @@ def generate_image(quote, byline, title, save_dir=None):
         text_width = draw.textbbox((0, 0), line, font=font_main)[2]
         text_height = draw.textbbox((0, 0), line, font=font_main)[3]
         x = (img_width - text_width) / 2
-        draw.text((x, current_y), line, fill=text_color, font=font_main)
-        current_y += text_height
+        # Use bold text rendering for heavier appearance
+        _draw_bold_text(draw, line, (x, current_y), font_main, text_color)
+        current_y += text_height - 5  # Even tighter line spacing like The Free Press
 
-    # 9. Draw the byline text at the bottom center - using The Free Press brand color
+    # 9. Draw the byline text at the bottom center - using The Free Press red color
     formatted_byline = byline
     if byline and byline.strip():
         formatted_byline = "—" + byline.lstrip("-–— ").strip()
     byline_width = draw.textbbox((0, 0), formatted_byline, font=font_byline)[2]
     byline_height = draw.textbbox((0, 0), formatted_byline, font=font_byline)[3]
     byline_x = (img_width - byline_width) / 2
-    byline_y = img_height - padding - byline_height + 20
-    # The Free Press brand color - dark red
-    byline_color = (132, 60, 44)  # Dark red #843c2c from The Free Press brand
+    byline_y = img_height - padding + 40  # Position like in The Free Press image
+    # The Free Press uses a bright red for bylines - matching the image
+    byline_color = (220, 53, 69)  # Bright red matching The Free Press style
+    # Use regular text (not bold effect) for the byline as it's more elegant
     draw.text((byline_x, byline_y), formatted_byline, fill=byline_color, font=font_byline)
 
-    # 10. Add The Free Press branding at the top
-    # For now, we'll use text-based branding. In a real implementation, 
-    # you'd want to use The Free Press logo image
+    # 10. Add The Free Press logo at the top - exactly like in the image
     try:
-        # Try to load The Free Press logo if available
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(script_dir)
+        # Create "THE FP" logo text exactly like in the image
+        logo_line1 = "THE"
+        logo_line2 = "FP"
         
-        # Look for The Free Press logo (you'd need to add this to your project)
-        logo_paths = [
-            os.path.join(project_root, "fp_logo.png"),
-            os.path.join(project_root, "the_free_press_logo.png")
-        ]
+        # Use black text for the logo, positioned at top center
+        logo_color = (0, 0, 0)  # Black like in the image
         
-        logo_loaded = False
-        for logo_path in logo_paths:
-            try:
-                logo = Image.open(logo_path).convert("RGBA")
-                logo_width = 180 # Set a desired width for the logo
-                aspect_ratio = logo.width / logo.height
-                logo_height = int(logo_width / aspect_ratio)
-
-                logo = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
-
-                # Position the logo at the top center with padding
-                logo_x = int((img_width - logo.width) / 2)
-                logo_y = int(max(0, padding - 50))
-
-                image.paste(logo, (logo_x, logo_y), logo)
-                logo_loaded = True
-                break
-            except FileNotFoundError:
-                continue
+        # Calculate positioning for two-line logo
+        line1_width = draw.textbbox((0, 0), logo_line1, font=font_logo)[2]
+        line1_height = draw.textbbox((0, 0), logo_line1, font=font_logo)[3]
+        line2_width = draw.textbbox((0, 0), logo_line2, font=font_logo)[2]
+        line2_height = draw.textbbox((0, 0), logo_line2, font=font_logo)[3]
         
-        if not logo_loaded:
-            # Fallback: Use text-based branding
-            brand_text = "THE FREE PRESS"
-            brand_font_size = 28
-            try:
-                brand_font = ImageFont.truetype(font_paths[0], size=brand_font_size)
-            except:
-                brand_font = font_byline
-            
-            brand_width = draw.textbbox((0, 0), brand_text, font=brand_font)[2]
-            brand_x = (img_width - brand_width) / 2
-            brand_y = 40
-            
-            # Use The Free Press brand color for the text
-            draw.text((brand_x, brand_y), brand_text, fill=byline_color, font=brand_font)
+        # Center both lines
+        line1_x = (img_width - line1_width) / 2
+        line2_x = (img_width - line2_width) / 2
+        
+        # Position at top with proper spacing
+        logo_top_margin = 60
+        line1_y = logo_top_margin
+        line2_y = line1_y + line1_height - 8  # Even tighter spacing for logo
+        
+        # Draw the two-line logo with bold effect
+        _draw_bold_text(draw, logo_line1, (line1_x, line1_y), font_logo, logo_color)
+        _draw_bold_text(draw, logo_line2, (line2_x, line2_y), font_logo, logo_color)
 
     except Exception as e:
         print(f"An error occurred while processing the branding: {e}")
-        # Fallback: Use text-based branding
-        brand_text = "THE FREE PRESS"
-        brand_width = draw.textbbox((0, 0), brand_text, font=font_byline)[2]
+        # Fallback: Use single line branding
+        brand_text = "THE FP"
+        brand_width = draw.textbbox((0, 0), brand_text, font=font_logo)[2]
         brand_x = (img_width - brand_width) / 2
-        brand_y = 40
-        draw.text((brand_x, brand_y), brand_text, fill=byline_color, font=font_byline)
+        brand_y = 60
+        draw.text((brand_x, brand_y), brand_text, fill=(0, 0, 0), font=font_logo)
 
     # 11. Save the image
     if save_dir:
