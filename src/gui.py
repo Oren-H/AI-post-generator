@@ -9,9 +9,10 @@ import gradio as gr
 from dotenv import load_dotenv
 from .graph import Graph
 from .image_generation import generate_image
+from .fp_post_generation import generate_image as fp_generate_image
 
 
-def run_generation(article_path: str, author: str):
+def run_generation(article_path: str, author: str, style: str = "Original"):
     article_path = (article_path or "").strip()
     author = (author or "").strip()
     if not article_path:
