@@ -5,8 +5,9 @@ import argparse
 from .graph import Graph
 from dotenv import load_dotenv
 from .image_generation import generate_image
+from .fp_post_generation import generate_image as fp_generate_image
 
-def main(article_path=None, output_dir=None):
+def main(article_path=None, output_dir=None, style="Original"):
     logging.getLogger("pdfminer").setLevel(logging.ERROR)
     load_dotenv()
     default_article_path = "Conservatives in Academia.pdf"
@@ -46,7 +47,11 @@ def main(article_path=None, output_dir=None):
     for idx, quote in enumerate(result["quotes"].quotes, start=1):
         print(quote)    
         print('-'*100)
-        generate_image(quote, "-Oren Hartstein", f"{article_title}_{idx}", save_dir=output_dir)
+        # Choose the appropriate generation function based on style
+        if style == "The Free Press":
+            fp_generate_image(quote, "-Oren Hartstein", f"{article_title}_{idx}", save_dir=output_dir)
+        else:  # Default to original style
+            generate_image(quote, "-Oren Hartstein", f"{article_title}_{idx}", save_dir=output_dir)
 
     print('='*150)
     print("INSTA CAPTION")
@@ -56,5 +61,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Instagram post images from an article PDF.")
     parser.add_argument("--article", "-a", help="Path to the article PDF", default=None)
     parser.add_argument("--output", "-o", help="Directory to save images (defaults to article's folder)", default=None)
+    parser.add_argument("--style", "-s", help="Post style to use", choices=["Original", "The Free Press"], default="Original")
     args = parser.parse_args()
-    main(article_path=args.article, output_dir=args.output)
+    main(article_path=args.article, output_dir=args.output, style=args.style)

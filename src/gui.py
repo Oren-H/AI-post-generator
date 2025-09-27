@@ -152,6 +152,12 @@ def launch_app():
                 value="",
                 placeholder="e.g., Oren Hartstein",
             )
+            style_input = gr.Dropdown(
+                label="Post Style",
+                choices=["Original", "The Free Press"],
+                value="Original",
+                info="Choose the visual style for your posts"
+            )
         generate_btn = gr.Button("Generate")
         with gr.Row():
             gallery = gr.Gallery(label="Generated Images", columns=3, visible=False)
@@ -164,7 +170,7 @@ def launch_app():
 
         generate_btn.click(
             fn=run_generation,
-            inputs=[article_input, author_input],
+            inputs=[article_input, author_input, style_input],
             outputs=[gallery, caption_box, files, status, paths_state, download_all_btn],
         )
         download_all_btn.click(fn=create_zip, inputs=paths_state, outputs=download_all_btn)
