@@ -67,7 +67,11 @@ def run_generation(article_path: str, author: str, style: str = "Original"):
         save_dir = os.path.dirname(os.path.abspath(open_path))
         for idx, quote in enumerate(quotes, start=1):
             title = f"{article_title}_{idx}"
-            generate_image(quote, byline, title, save_dir=save_dir)
+            # Choose the appropriate generation function based on style
+            if style == "The Free Press":
+                fp_generate_image(quote, byline, title, save_dir=save_dir)
+            else:  # Default to original style
+                generate_image(quote, byline, title, save_dir=save_dir)
             image_paths.append(os.path.abspath(os.path.join(save_dir, f"{title}.png")))
 
         # Save caption to a .txt file and include in downloadable files/state (not gallery)
