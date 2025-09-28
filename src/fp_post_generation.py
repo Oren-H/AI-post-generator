@@ -83,8 +83,7 @@ def generate_image(quote, byline, title, save_dir=None):
     img_width = 1080  # Standard Instagram post aspect ratio (square)
     img_height = 1080
     # The Free Press uses clean white/light backgrounds with dark text
-    bg_color = (245, 241, 235)  # Clean white background
-
+    bg_color = (245, 229, 164)  # Beige background
     # 2. Create a new image with the specified dimensions and color
     image = Image.new('RGB', (img_width, img_height), color=bg_color)
 
