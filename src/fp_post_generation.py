@@ -80,8 +80,8 @@ def _draw_bold_text(draw, text, position, font, fill):
 def generate_image(quote, byline, title, save_dir=None):
 
     # 1. Define image dimensions and background color - The Free Press style
-    img_width = 1080  # Standard Instagram post aspect ratio (square)
-    img_height = 1080
+    img_width = 1080  # Standard Instagram post width
+    img_height = 1350  # 4:5 aspect ratio (1080 * 5/4 = 1350)
     # The Free Press uses clean white/light backgrounds with dark text
     bg_color = (245, 229, 164)  # Beige background
     # 2. Create a new image with the specified dimensions and color
@@ -205,39 +205,40 @@ def generate_image(quote, byline, title, save_dir=None):
     # Use bold text effect for the byline
     _draw_bold_text(draw, formatted_byline, (byline_x, byline_y), font_byline, byline_color)
 
-    # 10. Add The Free Press logo at the top - exactly like in the image
+    # 10. Load and place the logo image at the top center
+    # Resolve logo path relative to project root (parent of this file's directory)
     try:
-        # Create "THE FP" logo text exactly like in the image
-        logo_line1 = "THE"
-        logo_line2 = "FP"
-        
-        # Use black text for the logo, positioned at top center
-        logo_color = (0, 0, 0)  # Black like in the image
-        
-        # Calculate positioning for two-line logo
-        line1_bbox = draw.textbbox((0, 0), logo_line1, font=font_logo)
-        line1_width = line1_bbox[2] - line1_bbox[0]
-        line1_height = line1_bbox[3] - line1_bbox[1]
-        
-        line2_bbox = draw.textbbox((0, 0), logo_line2, font=font_logo)
-        line2_width = line2_bbox[2] - line2_bbox[0]
-        line2_height = line2_bbox[3] - line2_bbox[1]
-        
-        # Center both lines
-        line1_x = (img_width - line1_width) / 2
-        line2_x = (img_width - line2_width) / 2
-        
-        # Position at top with proper spacing
-        logo_top_margin = 50
-        line1_y = logo_top_margin
-        line2_y = line1_y + line1_height - 5  # Tight spacing for logo
-        
-        # Draw the two-line logo with bold effect
-        _draw_bold_text(draw, logo_line1, (line1_x, line1_y), font_logo, logo_color)
-        _draw_bold_text(draw, logo_line2, (line2_x, line2_y), font_logo, logo_color)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(script_dir)
+        logo_path = os.path.join(project_root, "fplogo2.png")
 
+        logo = Image.open(logo_path).convert("RGBA")
+        logo_width = 120 # Set a desired width for the logo (significantly smaller)
+        aspect_ratio = logo.width / logo.height
+        logo_height = int(logo_width / aspect_ratio)
+
+        logo = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
+
+        # Position the logo at the top center with padding
+        logo_x = int((img_width - logo.width) / 2)
+        logo_y = int(max(0, padding - 60))
+
+        # Paste the logo directly without recoloring (preserve original colors)
+        if logo.mode == 'RGBA':
+            image.paste(logo, (logo_x, logo_y), logo)
+        else:
+            image.paste(logo, (logo_x, logo_y))
+
+    except FileNotFoundError:
+        print(f"Logo file not found at: {logo_path}. Using fallback text logo.")
+        # Fallback: Use single line branding
+        brand_text = "THE FP"
+        brand_width = draw.textbbox((0, 0), brand_text, font=font_logo)[2]
+        brand_x = (img_width - brand_width) / 2
+        brand_y = 60
+        draw.text((brand_x, brand_y), brand_text, fill=(0, 0, 0), font=font_logo)
     except Exception as e:
-        print(f"An error occurred while processing the branding: {e}")
+        print(f"An error occurred while processing the logo: {e}")
         # Fallback: Use single line branding
         brand_text = "THE FP"
         brand_width = draw.textbbox((0, 0), brand_text, font=font_logo)[2]
