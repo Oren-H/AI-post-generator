@@ -114,30 +114,31 @@ def generate_image(quote, byline, title, save_dir=None):
                 if font_path.endswith('.ttc'):
                     # For font collections, try to get bold variant (index 1)
                     try:
-                        font_main = ImageFont.truetype(font_path, size=55, index=1)
-                        font_logo = ImageFont.truetype(font_path, size=32, index=1)
+                        font_main = ImageFont.truetype(font_path, size=60, index=1)
+                        font_logo = ImageFont.truetype(font_path, size=60, index=1)
                     except (IOError, OSError, TypeError):
                         # Fallback to regular variant (index 0)
-                        font_main = ImageFont.truetype(font_path, size=55, index=0)
-                        font_logo = ImageFont.truetype(font_path, size=32, index=0)
+                        font_main = ImageFont.truetype(font_path, size=60, index=0)
+                        font_logo = ImageFont.truetype(font_path, size=60, index=0)
                 else:
-                    font_main = ImageFont.truetype(font_path, size=55)
-                    font_logo = ImageFont.truetype(font_path, size=32)
+                    font_main = ImageFont.truetype(font_path, size=60)
+                    font_logo = ImageFont.truetype(font_path, size=60)
                 break
             except (IOError, OSError, TypeError):
                 continue
         
         # For byline, use EB Garamond (now installed) with fallbacks
+        
         serif_fonts = [
-            os.path.expanduser("~/Library/Fonts/EBGaramond12-Italic.otf"),  # Primary choice - authentic Garamond italic
-            os.path.expanduser("~/Library/Fonts/EBGaramond12-Regular.otf"), # Garamond regular
+            os.path.expanduser("~/Library/Fonts/EBGaramond12-Regular.otf"),  # Primary choice - authentic Garamond regular
+            os.path.expanduser("~/Library/Fonts/EBGaramond12-Italic.otf"), # Garamond italic
             "/System/Library/Fonts/Palatino.ttc",  # Fallback - elegant serif
             "/System/Library/Fonts/Times.ttc",     # Final fallback
         ]
         
         for serif_path in serif_fonts:
             try:
-                font_byline = ImageFont.truetype(serif_path, size=32)
+                font_byline = ImageFont.truetype(serif_path, size=60)
                 break
             except (IOError, OSError, TypeError):
                 continue
