@@ -203,8 +203,8 @@ def generate_image(quote, byline, title, save_dir=None):
     byline_y = img_height - 80  # Fixed position from bottom
     # The Free Press uses a bright red for bylines - matching the image
     byline_color = (220, 53, 69)  # Bright red matching The Free Press style
-    # Use regular text (not bold effect) for the byline as it's more elegant
-    draw.text((byline_x, byline_y), formatted_byline, fill=byline_color, font=font_byline)
+    # Use bold text effect for the byline
+    _draw_bold_text(draw, formatted_byline, (byline_x, byline_y), font_byline, byline_color)
 
     # 10. Add The Free Press logo at the top - exactly like in the image
     try:
