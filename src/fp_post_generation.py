@@ -26,48 +26,7 @@ def _wrap_text(draw, text, font, max_width):
         lines.append(" ".join(current_line))
     return lines
 
-def _normalize_quotes(text: str) -> str:
-    """
-    Ensure nested quotes inside the pullout use single quotes, not double quotes,
-    while preserving apostrophes inside words. Converts paired double quotes
-    (straight or curly) used as quoting delimiters into single quotes.
-    """
-    if not text:
-        return text
 
-    normalized = text
-
-    # Boundaries: avoid converting apostrophes inside words
-    boundary_before = r'(^|[\s\(\[\{])'
-    boundary_after = r'(?=[\s\)\]\}\.,;:!?]|$)'
-
-    # Curly double quotes → single quotes when used as quoting delimiters
-    def repl_curly_doubles(m):
-        before, inner = m.group(1), m.group(2)
-        return f"{before}'{inner}'"
-
-    normalized = re.sub(boundary_before + r'"([^"]+)"' + boundary_after, repl_curly_doubles, normalized)
-
-    # Straight double quotes → single quotes when used as quoting delimiters
-    def repl_straight_doubles(m):
-        before, inner = m.group(1), m.group(2)
-        return f"{before}'{inner}'"
-
-    normalized = re.sub(boundary_before + r'"([^"\n]+)"' + boundary_after, repl_straight_doubles, normalized)
-
-    return normalized
-
-def _ensure_wrapped_in_double(text: str) -> str:
-    """Wrap entire text in straight double quotes if not already double-quoted."""
-    if not text:
-        return text
-    stripped = text.strip()
-    if (stripped.startswith('"') and stripped.endswith('"')) or (
-        stripped.startswith('"') and stripped.endswith('"')
-    ):
-        # Normalize to straight doubles for rendering consistency
-        return '"' + stripped.strip('""').strip('"') + '"'
-    return '"' + stripped + '"'
 
 def _draw_bold_text(draw, text, position, font, fill):
     """Draw text with simulated bold effect by drawing multiple times with slight offsets."""
@@ -91,7 +50,7 @@ def generate_image(quote, byline, title, save_dir=None):
     draw = ImageDraw.Draw(image)
 
     # 4. Define the text to display. This is a long paragraph to match the image.
-    long_text = _ensure_wrapped_in_double(_normalize_quotes(quote))
+    long_text = quote
     byline_text = "-Oren Hartstein"
     logo_text = "The Free Press"
 
