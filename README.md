@@ -2,6 +2,10 @@
 
 An AI-powered tool that summarizes a PDF article, pulls direct quotes, generates an Instagram caption, and creates shareable quote images.
 
+Here is an example image the tool is capable of producing:
+<img width="600" height="600" alt="image" src="https://github.com/user-attachments/assets/da227065-91c6-45c9-b219-e952eb8a69e2" />
+
+
 ## Features
 - Summarizes articles (2–3 paragraphs)
 - Extracts multiple pull-out quotes (direct quotations)
